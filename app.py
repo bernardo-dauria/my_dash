@@ -13,6 +13,17 @@ colors = {
     'text': '#7FDBFF'
 }
 
+markdown_text = '''
+### Dash and Markdown
+
+Dash apps can be written in Markdown.
+Dash uses the [CommonMark](http://commonmark.org/) 
+specification of Markdown.  
+Check out their [60 Second Markdown Tutorial](http://commonmark.org/help/)
+if this is your first introduction to Markdown!
+'''
+
+
 df_url = 'https://forge.scilab.org/index.php/p/rdataset/source/file/master/csv/ggplot2/msleep.csv'
 df = pd.read_csv(df_url)
 
@@ -24,26 +35,11 @@ def generate_table(dataframe, max_rows=10):
         # Body
         [html.Tr([
             html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
-        ]) for i in range(min(len(dataframe), max_rows))],
-
-        style={
-            'background': 'white'
-        }
+        ]) for i in range(min(len(dataframe), max_rows))]
     )
 
-app.layout = html.Div(style={'backgroundColor': colors['background']}, children=[
-    html.H1(
-        children='Hello Dash',
-        style={
-            'textAlign': 'center',
-            'color': colors['text']
-        }
-    ),
-
-    html.Div(children='Dash: A web application framework for Python.', style={
-        'textAlign': 'center',
-        'color': colors['text']
-    }),
+app.layout = html.Div(children=[
+    dcc.Markdown(children=markdown_text),
 
     dcc.Graph(
         id='life-exp-vs-gdp',
