@@ -3,6 +3,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
+import plotly.graph_objs as go
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -45,19 +46,29 @@ app.layout = html.Div(style={'backgroundColor': colors['background']}, children=
     }),
 
     dcc.Graph(
-        id='example-graph-2',
+        id='life-exp-vs-gdp',
         figure={
             'data': [
-                {'x': [1, 2, 3], 'y': [4, 1, 2], 'type': 'bar', 'name': 'SF'},
-                {'x': [1, 2, 3], 'y': [2, 4, 5], 'type': 'bar', 'name': u'Montréal'},
+                go.Scatter(
+                    x=df[df['vore'] == i]['bodywt'],
+                    y=df[df['vore'] == i]['sleep_total'],
+                    text=df[df['vore'] == i]['name'],
+                    mode='markers',
+                    opacity=0.7,
+                    marker={
+                        'size': 15,
+                        'line': {'width': 0.5, 'color': 'white'}
+                    },
+                    name=i
+                ) for i in df.vore.unique()
             ],
-            'layout': {
-                'plot_bgcolor': colors['background'],
-                'paper_bgcolor': colors['background'],
-                'font': {
-                    'color': colors['text']
-                }
-            }
+            'layout': go.Layout(
+                xaxis={'type': 'log', 'title': 'Body weight (kg)'},
+                yaxis={'title': 'Total daily sleep time (hr)'},
+                margin={'l': 40, 'b': 40, 't': 10, 'r': 10},
+                legend={'x': 0, 'y': 1},
+                hovermode='closest'
+            )
         }
     ),
 
