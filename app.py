@@ -2,14 +2,33 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+import pandas as pd
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
-app = dash.Dash("Pippo", external_stylesheets=external_stylesheets)
+app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 colors = {
     'background': '#111111',
     'text': '#7FDBFF'
 }
+
+df_url = 'https://forge.scilab.org/index.php/p/rdataset/source/file/master/csv/ggplot2/msleep.csv'
+df = pd.read_csv(df_url)
+
+def generate_table(dataframe, max_rows=10):
+    return html.Table(
+        # Header
+        [html.Tr([html.Th(col) for col in dataframe.columns])] +
+
+        # Body
+        [html.Tr([
+            html.Td(dataframe.iloc[i][col]) for col in dataframe.columns
+        ]) for i in range(min(len(dataframe), max_rows))],
+
+        style={
+            'background': 'white'
+        }
+    )
 
 app.layout = html.Div(style={'backgroundColor': colors['background']}, children=[
     html.H1(
@@ -40,7 +59,9 @@ app.layout = html.Div(style={'backgroundColor': colors['background']}, children=
                 }
             }
         }
-    )
+    ),
+
+    generate_table(df)
 ])
 
 if __name__ == '__main__':
