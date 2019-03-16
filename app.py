@@ -8,11 +8,6 @@ import plotly.graph_objs as go
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
-colors = {
-    'background': '#111111',
-    'text': '#7FDBFF'
-}
-
 markdown_text = '''
 ### Dash and Markdown
 
@@ -26,6 +21,8 @@ if this is your first introduction to Markdown!
 
 df_url = 'https://forge.scilab.org/index.php/p/rdataset/source/file/master/csv/ggplot2/msleep.csv'
 df = pd.read_csv(df_url)
+df_vore = df['vore'].dropna().sort_values().unique()
+opt_vore = [{'label': x + 'vore', 'value': x} for x in df_vore]
 
 def generate_table(dataframe, max_rows=10):
     return html.Table(
@@ -56,7 +53,7 @@ app.layout = html.Div(children=[
                         'line': {'width': 0.5, 'color': 'white'}
                     },
                     name=i
-                ) for i in df.vore.unique()
+                ) for i in df_vore
             ],
             'layout': go.Layout(
                 xaxis={'type': 'log', 'title': 'Body weight (kg)'},
@@ -68,7 +65,51 @@ app.layout = html.Div(children=[
         }
     ),
 
-    generate_table(df)
+    generate_table(df),
+
+    html.Div([
+        html.Label('Dropdown'),
+        dcc.Dropdown(
+            options= opt_vore,
+            value= df_vore[0]
+        ),
+
+        html.Label('Multi-Select Dropdown'),
+        dcc.Dropdown(
+            options= opt_vore,
+            value= df_vore[0:2],
+            multi= True
+        ),
+
+        html.Label('Radio Items'),
+        dcc.RadioItems(
+            options= opt_vore,
+            value= df_vore[0]
+        ),
+
+        html.Label('Checkboxes'),
+        dcc.Checklist(
+            options= opt_vore,
+            values= df_vore[0:2],
+        ),
+
+        html.Label('Text Input'),
+        dcc.Input(value= df_vore[0] + 'vore', type='text'),
+
+        html.Label('Slider'),
+        html.Div(
+            dcc.Slider(
+                min=0,
+                max=len(df_vore) - 1,
+                marks= opt_vore,
+                value=2
+            ),
+            style={
+                'marginLeft': '10%',
+                'marginRight': '10%'
+            }
+        ),
+    ], style={'columnCount': 2})
 ])
 
 if __name__ == '__main__':
