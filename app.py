@@ -3,7 +3,9 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
+
 import plotly.graph_objs as go
+from dash.dependencies import Input, Output
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -38,42 +40,21 @@ def generate_table(dataframe, max_rows=10):
 app.layout = html.Div(children=[
     dcc.Markdown(children=markdown_text),
 
-    dcc.Graph(
-        id='life-exp-vs-gdp',
-        figure={
-            'data': [
-                go.Scatter(
-                    x=df[df['vore'] == i]['bodywt'],
-                    y=df[df['vore'] == i]['sleep_total'],
-                    text=df[df['vore'] == i]['name'],
-                    mode='markers',
-                    opacity=0.7,
-                    marker={
-                        'size': 15,
-                        'line': {'width': 0.5, 'color': 'white'}
-                    },
-                    name=i
-                ) for i in df_vore
-            ],
-            'layout': go.Layout(
-                xaxis={'type': 'log', 'title': 'Body weight (kg)'},
-                yaxis={'title': 'Total daily sleep time (hr)'},
-                margin={'l': 40, 'b': 40, 't': 10, 'r': 10},
-                legend={'x': 0, 'y': 1},
-                hovermode='closest'
-            )
-        }
-    ),
+    dcc.Graph(id='my-graph'),
 
-    generate_table(df),
+    html.Div(id='my-div',
+             style={
+                 'background' : 'yellow',
+                 'color' : 'blue'
+             }),
 
     html.Div([
         html.Label('Dropdown'),
         dcc.Dropdown(
+            id='my-dropdown',
             options= opt_vore,
             value= df_vore[0]
         ),
-
         html.Label('Multi-Select Dropdown'),
         dcc.Dropdown(
             options= opt_vore,
@@ -111,6 +92,42 @@ app.layout = html.Div(children=[
         ),
     ], style={'columnCount': 2})
 ])
+
+@app.callback(
+    Output(component_id='my-div', component_property='children'),
+    [Input(component_id='my-dropdown', component_property='value')]
+)
+def update_output_div(input_value):
+    return 'You\'ve entered "{}"'.format(input_value)
+
+@app.callback(
+    Output(component_id='my-graph', component_property='figure'),
+    [Input(component_id='my-dropdown', component_property='value')]
+)
+def update_output_graph(input_value):
+    return  {
+                'data': [
+                    go.Scatter(
+                        x=df[df['vore'] == i]['bodywt'] if i == input_value else [],
+                        y=df[df['vore'] == i]['sleep_total'] if i == input_value else [],
+                        text=df[df['vore'] == i]['name'],
+                        mode='markers',
+                        opacity=0.7,
+                        marker={
+                            'size': 15,
+                            'line': {'width': 0.5, 'color': 'white'}
+                        },
+                        name=i
+                    ) for i in df_vore
+                ],
+                'layout': go.Layout(
+                    xaxis={'type': 'log', 'title': 'Body weight (kg)'},
+                    yaxis={'title': 'Total daily sleep time (hr)'},
+                    margin={'l': 40, 'b': 40, 't': 10, 'r': 10},
+                    legend={'x': 0, 'y': 1},
+                    hovermode='closest'
+                )
+            }
 
 if __name__ == '__main__':
     app.run_server(debug=True)
