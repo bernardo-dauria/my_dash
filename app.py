@@ -53,48 +53,35 @@ app.layout = html.Div(children=[
             multi= True
         ),
 
-        html.Label('Radio Items'),
-        dcc.RadioItems(
-            options= opt_vore,
-            value= df_vore[0]
-        ),
-
-        html.Label('Checkboxes'),
-        dcc.Checklist(
-            options= opt_vore,
-            values= df_vore[0:2],
-        ),
-
-        html.Label('Text Input'),
-        dcc.Input(value= df_vore[0] + 'vore', type='text'),
-
         html.Label('Slider'),
         html.Div(
-            dcc.Slider(
-                min=0,
-                max=len(df_vore) - 1,
-                marks= opt_vore,
-                value=2
+            dcc.RangeSlider(
+                id='my-slider',
+                step= 0.1
             ),
             style={
-                'marginLeft': '10%',
-                'marginRight': '10%'
+                'margin': '10%'
             }
         ),
-    ], style={'columnCount': 2})
+    ])
 ])
 
 @app.callback(
     [Output('my-graph', 'figure'),
      Output('my-box-plot', 'figure'),],
-    [Input('my-multi-dropdown', 'value')]
+    [Input('my-multi-dropdown', 'value'), Input('my-slider', 'value')]
 )
-def update_output_graph(input_value):
+def update_output_graph(input_value, slider_range):
+    if (len(slider_range) == 2):
+        l, h = slider_range
+    else :
+        l, h = 0, 100;
+    data_filtered = df[df['sleep_total'].between(l,h)]
     return  {
                 'data': [
                     go.Scatter(
-                        x=df[df['vore'] == i]['bodywt'] if i in input_value else [],
-                        y=df[df['vore'] == i]['sleep_total'] if i in input_value else [],
+                        x=data_filtered[data_filtered['vore'] == i]['bodywt'] if i in input_value else [],
+                        y=data_filtered[data_filtered['vore'] == i]['sleep_total'] if i in input_value else [],
                         text=df[df['vore'] == i]['name'],
                         mode='markers',
                         opacity=0.7,
@@ -120,6 +107,24 @@ def update_output_graph(input_value):
                         ) if i in input_value else []
                           for i in df_vore ]
             }
+
+@app.callback(
+    [Output('my-slider', 'min'), Output('my-slider', 'max'), Output('my-slider', 'value'), Output('my-slider', 'marks')],
+    [Input('my-multi-dropdown', 'value')]
+)
+def update_slider(input_value):
+    def round(x):
+        return int(x) if x % 0.1 < 0.1 else x
+    data = df[df.vore.isin(input_value)]['sleep_total']
+    min = round(data.min())
+    max = round(data.max())
+    mean = round(data.mean())
+    low = round((min + mean)/2)
+    high = round((max + mean) / 2)
+    marks = {min: {'label': min, 'style': {'color': '#77b0b1'}},
+             max: {'label': max, 'style': {'color': '#77b0b1'}}}
+    return min, max,  [low, high], marks
+
 
 if __name__ == '__main__':
     app.run_server(debug=True)
