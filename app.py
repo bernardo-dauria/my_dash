@@ -3,6 +3,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import pandas as pd
+import numpy as np
 
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output
@@ -41,22 +42,12 @@ app.layout = html.Div(children=[
     dcc.Markdown(children=markdown_text),
 
     dcc.Graph(id='my-graph'),
-
-    html.Div(id='my-div',
-             style={
-                 'background' : 'yellow',
-                 'color' : 'blue'
-             }),
+    dcc.Graph(id='my-box-plot'),
 
     html.Div([
-        html.Label('Dropdown'),
-        dcc.Dropdown(
-            id='my-dropdown',
-            options= opt_vore,
-            value= df_vore[0]
-        ),
         html.Label('Multi-Select Dropdown'),
         dcc.Dropdown(
+            id='my-multi-dropdown',
             options= opt_vore,
             value= df_vore[0:2],
             multi= True
@@ -94,22 +85,16 @@ app.layout = html.Div(children=[
 ])
 
 @app.callback(
-    Output(component_id='my-div', component_property='children'),
-    [Input(component_id='my-dropdown', component_property='value')]
-)
-def update_output_div(input_value):
-    return 'You\'ve entered "{}"'.format(input_value)
-
-@app.callback(
-    Output(component_id='my-graph', component_property='figure'),
-    [Input(component_id='my-dropdown', component_property='value')]
+    [Output('my-graph', 'figure'),
+     Output('my-box-plot', 'figure'),],
+    [Input('my-multi-dropdown', 'value')]
 )
 def update_output_graph(input_value):
     return  {
                 'data': [
                     go.Scatter(
-                        x=df[df['vore'] == i]['bodywt'] if i == input_value else [],
-                        y=df[df['vore'] == i]['sleep_total'] if i == input_value else [],
+                        x=df[df['vore'] == i]['bodywt'] if i in input_value else [],
+                        y=df[df['vore'] == i]['sleep_total'] if i in input_value else [],
                         text=df[df['vore'] == i]['name'],
                         mode='markers',
                         opacity=0.7,
@@ -127,6 +112,13 @@ def update_output_graph(input_value):
                     legend={'x': 0, 'y': 1},
                     hovermode='closest'
                 )
+            },            \
+            {
+                'data': [ go.Box(
+                            y= df[df['vore'] == i]['sleep_total'],
+                            name= i + 'vore'
+                        ) if i in input_value else []
+                          for i in df_vore ]
             }
 
 if __name__ == '__main__':
