@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 
 import plotly.graph_objs as go
-from dash.dependencies import Input, Output
+from dash.dependencies import Input, Output, State
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
@@ -53,25 +53,38 @@ app.layout = html.Div(children=[
             multi= True
         ),
 
-        html.Label('Slider'),
-        html.Div(
-            dcc.RangeSlider(
-                id='my-slider',
-                step= 0.1
+        html.Div([
+            html.Div(
+                dcc.RangeSlider(
+                    id='my-slider',
+                    min= 0, max= 100, value=[0,100],
+                    step= 0.1,
+                ),
+                style={
+                    'width': '60%',
+                    'display': 'inline-block',
+                    'paddingLeft': '10%',
+                    'paddingRight': '10%'
+                }
             ),
+            html.Button('Update filter', id='my-button')
+        ],
             style={
-                'margin': '10%'
+                'marginTop': '5%',
+                'marginBottom': '5%'
             }
-        ),
+        )
     ])
 ])
 
 @app.callback(
     [Output('my-graph', 'figure'),
      Output('my-box-plot', 'figure'),],
-    [Input('my-multi-dropdown', 'value'), Input('my-slider', 'value')]
+    [Input('my-multi-dropdown', 'value'),
+     Input('my-button', 'n_clicks')],
+    [State('my-slider', 'value')]
 )
-def update_output_graph(input_value, slider_range):
+def update_output_graph(input_value, n_clicks, slider_range):
     if (len(slider_range) == 2):
         l, h = slider_range
     else :
