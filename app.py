@@ -2,8 +2,8 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_table
 import pandas as pd
-import numpy as np
 
 import plotly.graph_objs as go
 from dash.dependencies import Input, Output, State
@@ -12,13 +12,9 @@ external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 app = dash.Dash(__name__, external_stylesheets=external_stylesheets)
 
 markdown_text = '''
-### Dash and Markdown
+### Dash app
 
-Dash apps can be written in Markdown.
-Dash uses the [CommonMark](http://commonmark.org/) 
-specification of Markdown.  
-Check out their [60 Second Markdown Tutorial](http://commonmark.org/help/)
-if this is your first introduction to Markdown!
+Click on points to get more detailed information.
 '''
 
 
@@ -42,15 +38,20 @@ app.layout = html.Div(children=[
     dcc.Markdown(children=markdown_text),
 
     dcc.Graph(id='my-graph'),
-    dcc.Graph(id='my-box-plot'),
+    dcc.Graph(id='my-box-plot', style={'display': 'none'}),
 
     html.Div([
         html.Label('Multi-Select Dropdown'),
         dcc.Dropdown(
             id='my-multi-dropdown',
             options= opt_vore,
-            value= df_vore[0:2],
-            multi= True
+            value=df_vore[0:2],
+            multi=True
+        ),
+
+        dash_table.DataTable(
+            id='my-table',
+            columns=[{"name": i, "id": i} for i in df.columns]
         ),
 
         html.Div([
@@ -85,10 +86,10 @@ app.layout = html.Div(children=[
     [State('my-slider', 'value')]
 )
 def update_output_graph(input_value, n_clicks, slider_range):
-    if (len(slider_range) == 2):
+    if len(slider_range) == 2:
         l, h = slider_range
-    else :
-        l, h = 0, 100;
+    else:
+        l, h = 0, 100
     data_filtered = df[df['sleep_total'].between(l,h)]
     return  {
                 'data': [
@@ -110,8 +111,8 @@ def update_output_graph(input_value, n_clicks, slider_range):
                     yaxis={'title': 'Total daily sleep time (hr)'},
                     margin={'l': 40, 'b': 40, 't': 10, 'r': 10},
                     legend={'x': 0, 'y': 1},
-                    hovermode='closest'
-                )
+                    hovermode='closest',
+                    dragmode='lasso')
             },            \
             {
                 'data': [ go.Box(
@@ -137,6 +138,20 @@ def update_slider(input_value):
     marks = {min: {'label': min, 'style': {'color': '#77b0b1'}},
              max: {'label': max, 'style': {'color': '#77b0b1'}}}
     return min, max,  [low, high], marks
+
+@app.callback(
+    Output('my-table', 'data'),
+    [Input('my-graph', 'selectedData')])
+def display_selected_data(selected_data):
+    if selected_data is None or len(selected_data) == 0:
+        return {}
+
+    points = selected_data['points']
+    if len(points) == 0:
+        return {}
+
+    names = [x['text'] for x in points]
+    return df[df['name'].isin(names)].to_dict("rows")
 
 
 if __name__ == '__main__':
