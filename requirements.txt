@@ -1,6 +1,6 @@
 dash
 dash-core-components
 dash-html-components
-import dash_table
+dash_table
 pandas
 numpy
