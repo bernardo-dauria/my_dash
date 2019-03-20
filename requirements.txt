@@ -4,3 +4,4 @@ dash-html-components
 dash_table
 pandas
 numpy
+plotly
